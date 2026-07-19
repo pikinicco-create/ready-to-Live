@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10.9ライブ 準備タスクトラッカー — ピキニッコ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #EDE9E0;
+  --surface: #E5E0D5;
+  --ink: #0F0F0F;
+  --red: #C8321E;
+  --muted: #6B6760;
+  --border: #C8C3B8;
+  --white: #F7F4EF;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 300;
+  line-height: 1.9;
+  font-size: 14px;
+}
+
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 64px 40px 100px;
+}
+
+/* Hero */
+.hero {
+  padding: 40px 0 40px;
+  border-bottom: 1px solid var(--ink);
+  margin-bottom: 48px;
+}
+.hero-eyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  color: var(--red);
+  margin-bottom: 24px;
+}
+.hero-date {
+  display: flex;
+  align-items: flex-end;
+  line-height: 1;
+  margin-bottom: 18px;
+  font-weight: 900;
+}
+.hero-date span { display: inline-block; }
+.hero-sub {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--muted);
+  margin-bottom: 36px;
+}
+
+.countdown-row {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.countdown-block { flex-shrink: 0; }
+.countdown-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.countdown-num {
+  font-size: clamp(36px, 8vw, 52px);
+  font-weight: 900;
+  color: var(--red);
+  line-height: 1;
+  display: inline-block;
+}
+.countdown-unit {
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: 4px;
+}
+.progress-block { flex: 1; min-width: 220px; }
+.wave-progress { width: 100%; height: 36px; display: block; }
+.progress-text {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+  letter-spacing: 0.03em;
+}
+
+/* Decision callout */
+.decision-callout {
+  background: var(--ink);
+  color: var(--white);
+  padding: 28px 32px;
+  margin: 0 0 32px;
+}
+.decision-callout-title {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  letter-spacing: 0.03em;
+}
+.decision-callout-item {
+  font-size: 13px;
+  line-height: 1.9;
+  margin-bottom: 10px;
+  display: flex;
+  gap: 10px;
+}
+.decision-callout-item span.num {
+  color: var(--red);
+  flex-shrink: 0;
+  font-weight: 700;
+}
+.decision-callout-note {
+  font-size: 11px;
+  color: #B5B0A5;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #3A3A3A;
+  line-height: 1.8;
+}
+
+/* Ready note */
+.ready-note {
+  background: var(--white);
+  border-left: 3px solid #1A7050;
+  padding: 16px 22px;
+  font-size: 12px;
+  color: #333;
+  margin-bottom: 44px;
+  line-height: 1.8;
+}
+.ready-note b { color: #1A7050; }
+
+/* Phases */
+.phase { margin-bottom: 52px; }
+.phase-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--ink);
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.phase-num {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: 0.3em;
+  flex-shrink: 0;
+}
+.phase-title-group { flex: 1; min-width: 160px; }
+.phase-title { font-size: 17px; font-weight: 700; letter-spacing: 0.02em; }
+.phase-period { font-size: 10px; color: var(--muted); margin-top: 2px; letter-spacing: 0.04em; }
+.phase-progress { font-size: 11px; color: var(--muted); font-weight: 700; flex-shrink: 0; }
+.phase-note {
+  font-size: 11px;
+  color: var(--red);
+  margin: 10px 0 18px;
+  font-family: 'Noto Serif JP', serif;
+  line-height: 1.8;
+}
+
+/* Task rows */
+.task {
+  display: flex;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--surface);
+  align-items: flex-start;
+}
+.task:last-child { border-bottom: none; }
+.task-check-wrap {
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 3px;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+}
+.task-check-input {
+  position: absolute;
+  opacity: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+.task-check-visual {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  position: relative;
+  background: var(--white);
+}
+.task-check-input:checked + .task-check-visual { background: var(--ink); }
+.task-check-input:checked + .task-check-visual::after {
+  content: '';
+  position: absolute;
+  left: 5px; top: 2px;
+  width: 4px; height: 8px;
+  border-right: 2px solid var(--white);
+  border-bottom: 2px solid var(--white);
+  transform: rotate(45deg);
+}
+.task-check-input:focus-visible + .task-check-visual {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+.task-body { flex: 1; min-width: 0; }
+.task-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; line-height: 1.5; }
+.task-desc { font-size: 12px; color: #444; line-height: 1.8; margin-bottom: 8px; }
+.task.done .task-name { text-decoration: line-through; color: var(--muted); }
+.task.done .task-desc { color: var(--muted); opacity: 0.75; }
+.task-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.tag.cat-zenhan { background: #F5EEDC; color: #8A6D1A; }
+.tag.cat-kouhan { background: #E3EEF0; color: #1A5F73; }
+.tag.cat-system { background: #EDE4F0; color: #6A3A7A; }
+.tag.cat-promo  { background: #F5E6EA; color: #A83A5C; }
+.tag.flag-decision { background: var(--red); color: var(--white); }
+.tag.flag-risk { background: transparent; color: var(--red); border: 1px solid var(--red); }
+
+/* Notes */
+.notes-section { margin-top: 56px; }
+.sub-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--red);
+  margin-bottom: 12px;
+}
+.notes-area {
+  width: 100%;
+  min-height: 110px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 16px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--ink);
+  resize: vertical;
+}
+.notes-area:focus { outline: 1.5px solid var(--red); outline-offset: -1px; }
+.save-hint { font-size: 10px; color: var(--muted); margin-top: 8px; }
+
+/* Footer */
+.footer {
+  margin-top: 80px;
+  padding-top: 24px;
+  border-top: 1px solid var(--ink);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.footer-title { font-size: 12px; font-weight: 700; }
+.footer-note { font-size: 10px; color: var(--muted); }
+
+@media (max-width: 640px) {
+  .page { padding: 40px 20px 80px; }
+  .countdown-row { flex-direction: column; align-items: stretch; gap: 20px; }
+  .phase-header { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">LIVE PREPARATION — TASK TRACKER</div>
+    <div class="hero-date">
+      <span style="font-size:56px;">1</span><span style="font-size:76px;">0</span><span style="font-size:48px;color:var(--red);margin:0 6px;">.</span><span style="font-size:72px;">9</span>
+    </div>
+    <div class="hero-sub">ライブ本番に向けた準備タスク管理（作成起点：2026年7月6日）</div>
+
+    <div class="countdown-row">
+      <div class="countdown-block">
+        <div class="countdown-label" id="countdown-label">本番まであと</div>
+        <span class="countdown-num" id="countdown-num">-</span><span class="countdown-unit" id="countdown-unit">日</span>
+      </div>
+      <div class="progress-block">
+        <svg class="wave-progress" viewBox="0 0 560 48" preserveAspectRatio="none">
+          <path class="wave-bg" d="M0,24 L28,24 C34,24 37,22 42,17 C47,12 50,4 58,4 C66,4 69,44 77,44 C85,44 88,2 96,2 C104,2 107,46 115,46 C123,46 126,6 134,6 C142,6 145,42 153,42 C161,42 164,10 172,10 C178,10 180,22 184,23 C188,24 190,24 200,24 L560,24" fill="none" stroke="var(--border)" stroke-width="1.5"/>
+          <path id="wave-fill" d="M0,24 L28,24 C34,24 37,22 42,17 C47,12 50,4 58,4 C66,4 69,44 77,44 C85,44 88,2 96,2 C104,2 107,46 115,46 C123,46 126,6 134,6 C142,6 145,42 153,42 C161,42 164,10 172,10 C178,10 180,22 184,23 C188,24 190,24 200,24 L560,24" fill="none" stroke="var(--red)" stroke-width="1.8"/>
+        </svg>
+        <div class="progress-text" id="progress-text">0 / 28 完了（0%）</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECISION CALLOUT -->
+  <div class="decision-callout">
+    <div class="decision-callout-title">今すぐ決めておきたいこと（フェーズ1のうちに）</div>
+    <div class="decision-callout-item"><span class="num">①</span> リングマウスの外部入力デバイス化＋Air Stepの組み合わせで、ルーパーの主要操作が画面なしで回るか</div>
+    <div class="decision-callout-item"><span class="num">②</span> ①が厳しい場合、Stream Deckを保険として組み込むか</div>
+    <div class="decision-callout-item"><span class="num">③</span> ヴォイス即興でOMax（要Max/MSP環境）を使うか、Dicy2（Ableton内で完結）にするか、どちらも使わないか</div>
+    <div class="decision-callout-note">この3つは後続作業の前提になる。ここが決まらないとルーパー用セット構築（t12）とヴォイス用マッピング設計（t10）の仕様が固まらないため、先送りにしない。</div>
+  </div>
+
+  <!-- READY NOTE -->
+  <div class="ready-note">
+    🎵 <b>カーテンコール（Caro mio ben）は準備不要</b> — 普段の弾き語り練習で既にカバーされている。このトラッカーの対象外。
+  </div>
+
+  <!-- PHASES (rendered by JS) -->
+  <div id="phases"></div>
+
+  <!-- NOTES -->
+  <div class="notes-section">
+    <div class="sub-title">メモ</div>
+    <textarea id="notes" class="notes-area" placeholder="気づいたこと、調整したいこと、決定事項の結論などを自由に書き留める"></textarea>
+    <div class="save-hint" id="save-hint">&nbsp;</div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-title">ピキニッコ — 10.9 LIVE PREP</div>
+    <div class="footer-note">チェック状態とメモはこの端末に自動保存されます</div>
+  </div>
+
+</div>
+
+<script>
+const SIZE_LABEL = { S: '小', M: '中', L: '大' };
+
+const CATS = {
+  zenhan: { label: '前半' },
+  kouhan: { label: '後半' },
+  system: { label: 'システム' },
+  promo:  { label: '広報' },
+};
+
+const PHASES = {
+  1: { title: '基盤・意思決定',            period: '7/6 – 7/20',  note: '' },
+  2: { title: 'システム構築・素材制作',     period: '7/21 – 8/31', note: '8月に確保できそうな「3時間×5日」をここに集中投入する想定' },
+  3: { title: '統合・練習',                period: '9/1 – 9/21',  note: '' },
+  4: { title: '仕上げ',                    period: '9/22 – 10/9', note: '' },
+};
+
+const TASKS = [
+  // ---- PHASE 1 ----
+  { id:'t01', phase:1, cat:'promo',  size:'S', name:'フライヤー確定', desc:'既存デザインに日時・会場・料金など本番情報を反映して仕上げる' },
+  { id:'t02', phase:1, cat:'promo',  size:'S', name:'告知スタート', desc:'SNSや知人へ第一報を出す。配布より先にまず認知を広げる' },
+  { id:'t03', phase:1, cat:'system', size:'M', decision:true, name:'リングマウスの外部入力デバイス化', desc:'マウス操作としてではなく、任意の信号（MIDI/OSC/キー入力など）を送れるようMac側を再設定する' },
+  { id:'t04', phase:1, cat:'system', size:'S', decision:true, name:'Air Step＋リングマウスの試作テスト', desc:'ルーパーの主要操作（録音／オーバーダブ／停止／クリア）を画面を見ずに回せるか検証。厳しければStream Deckを保険にするか判断' },
+  { id:'t05', phase:1, cat:'system', size:'S', decision:true, name:'ヴォイス即興でのOMax／Dicy2使用可否', desc:'OMaxは別途Max/MSP環境の導入と学習が必要。Ableton内で完結させたいならDicy2という選択肢もある' },
+  { id:'t06', phase:1, cat:'zenhan', size:'S', name:'既存Myo基盤の確認', desc:'ピアノ用グラニュラーで動いているMyo→Ableton経路が、ヴォイス用途にそのまま転用できるか棚卸しする' },
+  { id:'t07', phase:1, cat:'zenhan', size:'M', name:'「飛び出せ有象無象」再構築 着手', desc:'過去のAbletonセットを開き、今回の構成に合わせて組み直す土台を作る' },
+
+  // ---- PHASE 2 ----
+  { id:'t08', phase:2, cat:'zenhan', size:'M', name:'「飛び出せ有象無象」完成', desc:'単体で頭から通して動作確認まで終える' },
+  { id:'t09', phase:2, cat:'zenhan', size:'M', name:'「音響詩」再構築・完成', desc:'Abletonセットを組み直し、単体動作確認まで終える' },
+  { id:'t10', phase:2, cat:'zenhan', size:'L', risk:true, slot:'8月集中日', name:'Myo→ヴォイスエフェクト マッピング作成', desc:'ピアノ用とは別の対応関係を新規に設計・試作する' },
+  { id:'t11', phase:2, cat:'zenhan', size:'M', name:'リングマウスをヴォイス即興の操作系に統合', desc:'外部入力化したリングマウスを本番の操作フローに組み込む' },
+  { id:'t12', phase:2, cat:'system', size:'L', risk:true, slot:'8月集中日', name:'ルーパー用Abletonセット構築', desc:'録音／オーバーダブ／クリア／次ループへの遷移をマッピング。t04・t05の決定を反映させる' },
+  { id:'t13', phase:2, cat:'kouhan', size:'L', slot:'月3h・8月集中日', name:'ままいー 伴奏符の作曲・完成', desc:'弾き語りの土台となる伴奏符を仕上げる。まとまった集中時間を使いたい' },
+  { id:'t14', phase:2, cat:'promo',  size:'S', name:'フライヤー配布 開始', desc:'' },
+
+  // ---- PHASE 3 ----
+  { id:'t15', phase:3, cat:'system', ongoing:true, risk:true, slot:'火木・平日隙間', name:'ルーパー即興スキルの練習', desc:'画面を見ない前提で毎日少しずつ体に入れる。ヴォイス即興と組み合わせて練習しやすい' },
+  { id:'t16', phase:3, cat:'kouhan', ongoing:true, slot:'火木', name:'ピアノ即興 実践練習', desc:'Myoグラニュラーエフェクトを使いながら弾く感覚を作る' },
+  { id:'t17', phase:3, cat:'kouhan', ongoing:true, slot:'平日隙間・休日2h', name:'ピアノピキニッコ 練習組み込み', desc:'' },
+  { id:'t18', phase:3, cat:'kouhan', ongoing:true, slot:'休日2h', name:'ままいー：Ableton効果＋弾き語りの統合練習', desc:'' },
+  { id:'t19', phase:3, cat:'kouhan', ongoing:true, slot:'平日隙間', name:'ままいー：ピアノ演奏練習', desc:'' },
+  { id:'t20', phase:3, cat:'zenhan', ongoing:true, slot:'5:15', name:'ピキニッコ「初動の集中力」訓練', desc:'既存の朝練に統合し、始まった瞬間に空間を制圧する感覚を繰り返し体に入れる' },
+  { id:'t21', phase:3, cat:'promo',  size:'S', name:'告知の追い込み', desc:'本番4〜6週間前が反応の山場になりやすい時期' },
+  { id:'t22', phase:3, cat:null,     size:'S', name:'各曲 単体の通し練習を開始', desc:'断片ではなく頭から通す練習に切り替える' },
+
+  // ---- PHASE 4 ----
+  { id:'t23', phase:4, cat:null, size:'M', name:'前半 通し稽古', desc:'' },
+  { id:'t24', phase:4, cat:null, size:'M', name:'後半 通し稽古', desc:'' },
+  { id:'t25', phase:4, cat:null, size:'L', name:'フル通し稽古（転換込み）', desc:'前半→後半の転換や機材切り替えも含めて通す' },
+  { id:'t26', phase:4, cat:'system', size:'M', name:'システム最終確認・トラブルシューティング', desc:'' },
+  { id:'t27', phase:4, cat:'promo', size:'S', name:'フライヤー配布ラストコール', desc:'' },
+  { id:'t28', phase:4, cat:null, size:'S', name:'本番前の調整日・休息を確保', desc:'詰め込みすぎない。回路が定着するのは休んでいる間' },
+];
+
+const STORAGE_KEY = 'pikiniko-live-prep-1009';
+let state = { done: {}, notes: '' };
+let notesTimer = null;
+
+function renderTask(t) {
+  const row = document.createElement('div');
+  row.className = 'task' + (state.done[t.id] ? ' done' : '');
+
+  const wrap = document.createElement('div');
+  wrap.className = 'task-check-wrap';
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.className = 'task-check-input';
+  input.checked = !!state.done[t.id];
+  input.addEventListener('change', () => toggleTask(t.id));
+  const visual = document.createElement('span');
+  visual.className = 'task-check-visual';
+  wrap.appendChild(input);
+  wrap.appendChild(visual);
+
+  const body = document.createElement('div');
+  body.className = 'task-body';
+
+  const nameEl = document.createElement('div');
+  nameEl.className = 'task-name';
+  nameEl.textContent = t.name;
+  body.appendChild(nameEl);
+
+  if (t.desc) {
+    const descEl = document.createElement('div');
+    descEl.className = 'task-desc';
+    descEl.textContent = t.desc;
+    body.appendChild(descEl);
+  }
+
+  const meta = document.createElement('div');
+  meta.className = 'task-meta';
+
+  if (t.cat && CATS[t.cat]) {
+    const catTag = document.createElement('span');
+    catTag.className = 'tag cat-' + t.cat;
+    catTag.textContent = CATS[t.cat].label;
+    meta.appendChild(catTag);
+  }
+  if (t.decision) {
+    const dTag = document.createElement('span');
+    dTag.className = 'tag flag-decision';
+    dTag.textContent = '要決定';
+    meta.appendChild(dTag);
+  }
+  if (t.risk) {
+    const rTag = document.createElement('span');
+    rTag.className = 'tag flag-risk';
+    rTag.textContent = 'リスク高';
+    meta.appendChild(rTag);
+  }
+  if (t.size) {
+    const sTag = document.createElement('span');
+    sTag.className = 'tag';
+    sTag.textContent = SIZE_LABEL[t.size] || t.size;
+    meta.appendChild(sTag);
+  }
+  if (t.ongoing) {
+    const oTag = document.createElement('span');
+    oTag.className = 'tag';
+    oTag.textContent = '継続';
+    meta.appendChild(oTag);
+  }
+  if (t.slot) {
+    const slotTag = document.createElement('span');
+    slotTag.className = 'tag';
+    slotTag.textContent = t.slot;
+    meta.appendChild(slotTag);
+  }
+
+  body.appendChild(meta);
+  row.appendChild(wrap);
+  row.appendChild(body);
+  return row;
+}
+
+function render() {
+  const container = document.getElementById('phases');
+  container.innerHTML = '';
+
+  [1, 2, 3, 4].forEach(p => {
+    const phaseTasks = TASKS.filter(t => t.phase === p);
+    const doneCount = phaseTasks.filter(t => state.done[t.id]).length;
+    const info = PHASES[p];
+
+    const phaseDiv = document.createElement('div');
+    phaseDiv.className = 'phase';
+
+    const header = document.createElement('div');
+    header.className = 'phase-header';
+    header.innerHTML =
+      '<div class="phase-num">0' + p + '</div>' +
+      '<div class="phase-title-group">' +
+        '<div class="phase-title">' + info.title + '</div>' +
+        '<div class="phase-period">' + info.period + '</div>' +
+      '</div>' +
+      '<div class="phase-progress">' + doneCount + ' / ' + phaseTasks.length + '</div>';
+    phaseDiv.appendChild(header);
+
+    if (info.note) {
+      const noteEl = document.createElement('div');
+      noteEl.className = 'phase-note';
+      noteEl.textContent = info.note;
+      phaseDiv.appendChild(noteEl);
+    }
+
+    const list = document.createElement('div');
+    list.className = 'task-list';
+    phaseTasks.forEach(t => list.appendChild(renderTask(t)));
+    phaseDiv.appendChild(list);
+
+    container.appendChild(phaseDiv);
+  });
+
+  updateOverallProgress();
+}
+
+function toggleTask(id) {
+  state.done[id] = !state.done[id];
+  save();
+  render();
+}
+
+function updateOverallProgress() {
+  const total = TASKS.length;
+  const done = TASKS.filter(t => state.done[t.id]).length;
+  const ratio = total ? done / total : 0;
+  document.getElementById('progress-text').textContent =
+    done + ' / ' + total + ' 完了（' + Math.round(ratio * 100) + '%）';
+
+  const fillPath = document.getElementById('wave-fill');
+  if (fillPath) {
+    const len = fillPath.getTotalLength();
+    fillPath.style.strokeDasharray = len;
+    fillPath.style.strokeDashoffset = String(len * (1 - ratio));
+  }
+}
+
+function updateCountdown() {
+  const target = new Date(2026, 9, 9);
+  const now = new Date();
+  const target0 = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+  const now0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round((target0 - now0) / 86400000);
+
+  const labelEl = document.getElementById('countdown-label');
+  const numEl = document.getElementById('countdown-num');
+  const unitEl = document.getElementById('countdown-unit');
+
+  if (diffDays > 0) {
+    labelEl.textContent = '本番まであと';
+    numEl.textContent = diffDays;
+    unitEl.textContent = '日';
+  } else if (diffDays === 0) {
+    labelEl.textContent = '本番当日';
+    numEl.textContent = '';
+    unitEl.textContent = '';
+  } else {
+    labelEl.textContent = 'ライブ終了';
+    numEl.textContent = '';
+    unitEl.textContent = '';
+  }
+}
+
+async function load() {
+  try {
+    const result = await window.storage.get(STORAGE_KEY, false);
+    if (result && result.value) {
+      const parsed = JSON.parse(result.value);
+      state.done = parsed.done || {};
+      state.notes = parsed.notes || '';
+    }
+  } catch (e) {
+    // 保存データがまだ無い場合はデフォルト状態のまま進める
+  }
+  document.getElementById('notes').value = state.notes;
+  render();
+}
+
+async function save() {
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+    const hint = document.getElementById('save-hint');
+    hint.textContent = '保存しました';
+    setTimeout(() => { if (hint.textContent === '保存しました') hint.innerHTML = '&nbsp;'; }, 1500);
+  } catch (e) {
+    console.error('Storage save failed', e);
+  }
+}
+
+document.getElementById('notes').addEventListener('input', (e) => {
+  state.notes = e.target.value;
+  clearTimeout(notesTimer);
+  notesTimer = setTimeout(save, 600);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  updateCountdown();
+  load();
+});
+</script>
+</body>
+</html>
